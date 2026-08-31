@@ -1,13 +1,16 @@
 from pathlib import Path
 import re
 import logging
+import csv
+import json
 
 logger = logging.getLogger(__name__)
 
 class Transform:
 
-  BASSE_DIR = Path(__file__).resolve().parents[2]
+  BASE_DIR = Path(__file__).resolve().parents[2]
 
+  @staticmethod
   def transform_raw(curr_raw):
     return {
       "ciad": curr_raw.get("CIAD"),
@@ -21,33 +24,37 @@ class Transform:
       "latitude": curr_raw.get("Latitude"),
       "longitude": curr_raw.get("Longitude"),
     }
-
-  def transform_data(data):
+  @staticmethod
+  def transform_all_data(data):
     columns = ["ciad", "codigoOACI", "airport_name", "state",
                 "city", "altitude", "latgeopoint", "longeopoint",
                   "latitude", "longitude"]
 
-    processed_data = Transform.BASE_DIR / "data" / "processed"
-    rejected_data = Transform.BASE_DIR / "data" / "rejected"
+    dados_processados = Transform.BASE_DIR / "data" / "processed"
+    dados_rejeitados = Transform.BASE_DIR / "data" / "rejected"
 
-    processed_data.mkdir(parents=True,  exist_ok = True)
-    rejected_data.mkdir(parents=True,  exist_ok = True)
+    dados_processados.mkdir(parents=True,  exist_ok = True)
+    dados_rejeitados.mkdir(parents=True,  exist_ok = True)
 
     try:
        all_data = Transform.validate_data(data)
 
-       logger.info("Iniciando a transformação dos dados, total: %s", len(all_data))
+       logger.info("Iniciando a transformação dos dados, total: %s", len(data))
 
        processed_data, rejected_data = all_data
 
+       logger.info("Processando %s dados aprovados", len(processed_data))
+       Transform.save_processed_data(processed_data, columns)
 
+       logger.info("Processando %s dados rejeitados", len(rejected_data))
+       Transform.save_rejected_data(rejected_data)
     except Exception as e:
        logger.exception("Transformaçao concluída, válidos=%s, rejeitados=%s",
                         len(processed_data), len(rejected_data))
 
 
 
-
+  @staticmethod
   def validate_data(data):
     processed_data = []
     rejected_data = []
@@ -55,37 +62,36 @@ class Transform:
     for dado in data:
       curr_data = Transform.transform_raw(dado)
       reasons = []
-      ciad = dado.get("ciad")
-      lat_raw = dado.get("latgeopoint")
-      lon_raw = dado.get("longeopoint")
+      ciad = curr_data.get("ciad")
+      lat_raw = curr_data.get("latgeopoint")
+      lon_raw = curr_data.get("longeopoint")
 
       if not ciad or len(ciad) != 6:
         reasons.append("ciad com tamanho inválido")
       elif not re.match(r"^[A-Z]{2}\d{4}$", ciad.strip()):
         reasons.append("Padrão ciad invalido: 2 letras + 4 números")
 
-      if dado.get("codigoOACI") is None:
+      if curr_data.get("codigoOACI") is None:
         reasons.append("CódigoOACI ausente")
-      elif len(dado.get("codigoOACI")) != 4:
+      elif len(curr_data.get("codigoOACI")) != 4:
         reasons.append("CódigoOACI inválido")
 
-      if dado.get("airport_name") is None:
+      if curr_data.get("airport_name") is None:
         reasons.append("Nome do aeroporto vazio")
 
-      if dado.get("state") is None:
+      if curr_data.get("state") is None:
         reasons.append("Nome do estado do aeroporto ausente")
 
-      if dado.get("city") is None:
+      if curr_data.get("city") is None:
         reasons.append("Nome da cidade do aeroporto ausente")
 
       try:
         lat = float(lat_raw)
-        if not (-90.0 <= lat <= 90.0):
-            reasons.append("latgeopoint fora do intervalo global (-90 a 90)")
-        elif lat >= 0:
-            reasons.append("latgeopoint inválida: aeródromo no Brasil deve ter latitude negativa")
+        if not (-34.0 <= lat <= +6.0):
+            reasons.append("latgeopoint fora do intervalo global (-34.0 a -34.0)")
       except (ValueError, TypeError):
         reasons.append("latgeopoint deve ser um número válido")
+        raise
 
       try:
           lon = float(lon_raw)
@@ -95,6 +101,7 @@ class Transform:
               reasons.append("longeopoint inválida: aeródromo no Brasil deve ter longitude negativa")
       except (ValueError, TypeError):
           reasons.append("longeopoint deve ser um número válido")
+          raise
 
       if len(reasons) > 0:
         rejected_data.append({"reasons": reasons, "record": curr_data})
@@ -102,10 +109,38 @@ class Transform:
          processed_data.append(curr_data)
 
     if rejected_data:
-       logger.waring("Foram encontrados %s registros inválidos", len(rejected_data))
+       logger.warning("Foram encontrados %s registros inválidos", len(rejected_data))
 
     return [processed_data, rejected_data]
 
 
-
   #Criar métodos para salvar dados rejeitados e dados aceitos, e seguir linha 41
+  @staticmethod
+  def save_processed_data(processed_data, colunas):
+    PROCESSED_DIR = Transform.BASE_DIR / "data" / "processed" / "airports.csv"
+    try:
+      with open(PROCESSED_DIR, 'w', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=colunas)
+        writer.writeheader()
+        writer.writerows(processed_data)
+      logger.info("Dados  processados e gravados em: %s", PROCESSED_DIR)
+    except Exception as e:
+       logger.exception("Erro ao gravar dados processados: ", e)
+       raise
+
+    
+  @staticmethod
+  def save_rejected_data(rejected_data):
+    REJECTED_DIR = Transform.BASE_DIR / "data" / "rejected" / "rejected.json"
+    try:
+        with open(REJECTED_DIR, 'w', encoding="utf-8") as file:
+          json.dump(rejected_data, file, ensure_ascii=False, indent=4)
+
+        logger.info("Dados rejeitados gravados em: %s", REJECTED_DIR)
+    except Exception as e:
+       logger.exception("Erro ao gravar dados rejeitados em json: ", e)
+       raise
+
+       
+
+         

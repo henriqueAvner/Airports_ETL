@@ -29,6 +29,8 @@ class Extract:
         json.dump(json_formated, all_data, indent=4, ensure_ascii=False)
 
       logger.info("Dados extraídos com sucesso! Aeródromos públicos: %s", len(json_formated))
+
+      return json_formated
     except Exception as e:
       logger.exception("Erro ao extrair os dados: ", e)
       raise
