@@ -1,0 +1,2 @@
+2026-08-31 11:30:08,683 | INFO | src.extract.extract | Iniciando extração dos dados de aeródromos públicos
+2026-08-31 11:30:09,133 | INFO | src.extract.extract | Dados extraídos com sucesso! Aeródromos públicos: 496
