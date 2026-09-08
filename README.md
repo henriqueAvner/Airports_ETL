@@ -696,53 +696,756 @@ logs/pipeline.log
 
 ---
 
+<br />
+
 ## 10. Crie consultas SQL analíticas
 
 > **Crie em:** `sql/analysis.sql`
 
 <details>
-<summary><strong>Utilize SQL para analisar os aeroportos carregados</strong></summary>
+<summary><strong>Crie consultas analíticas utilizando os dados armazenados no PostgreSQL.</strong></summary>
 
 <br />
 
-Crie pelo menos:
+Agora que os dados dos aeroportos já estão armazenados no PostgreSQL, você deverá criar consultas SQL que permitam analisar o dataset.
+---
+O objetivo desta etapa é praticar SQL utilizando dados reais e revisar conceitos importantes para Engenharia de Dados, incluindo:
+
+- filtros;
+- agregações;
+- `GROUP BY`;
+- `HAVING`;
+- `CASE`;
+- subqueries;
+- CTEs;
+- múltiplas CTEs;
+- Window Functions;
+- `PARTITION BY`;
+- `ROW_NUMBER`;
+- `RANK`;
+- `DENSE_RANK`;
+- `LAG` / `LEAD`;
+- agregações como Window Functions;
+- combinação de CTE + Window Function.
+
+> ⚠️ Não utilize Pandas para responder às perguntas desta seção. As análises devem ser realizadas em SQL diretamente sobre o PostgreSQL.
+
+---
+
+## Consulta 1 — Quantidade de aeroportos por estado
+
+Descubra quantos aeroportos existem em cada estado.
+
+O resultado deverá apresentar:
 
 ```text
-5 consultas analíticas
+estado
+quantidade_aeroportos
 ```
 
-As consultas deverão responder perguntas sobre o dataset.
+Ordene do estado com maior quantidade para o estado com menor quantidade.
 
-Você é responsável por decidir quais análises fazem sentido de acordo com os dados disponíveis.
+### Conceitos trabalhados
 
-Entre as cinco consultas, deverá existir obrigatoriamente:
+```text
+SELECT
+COUNT
+GROUP BY
+ORDER BY
+```
 
-- pelo menos uma utilizando `GROUP BY` e alguma agregação;
-- pelo menos uma utilizando um destes recursos:
+---
+
+## Consulta 2 — Altitude média dos aeroportos por estado
+
+Calcule a altitude média dos aeroportos de cada estado.
+
+Apresente:
+
+```text
+estado
+quantidade_aeroportos
+altitude_media
+```
+
+Ordene os estados pela maior altitude média.
+
+### Conceitos trabalhados
+
+```text
+COUNT
+AVG
+GROUP BY
+ORDER BY
+```
+
+---
+
+## Consulta 3 — Estados com vários aeroportos
+
+Utilizando o resultado de uma agregação, retorne somente estados que possuam uma quantidade mínima de aeroportos.
+
+Escolha e documente qual limite você utilizou.
+
+Exemplo conceitual:
+
+```text
+Somente estados com 10 ou mais aeroportos.
+```
+
+### Conceitos trabalhados
+
+```text
+GROUP BY
+COUNT
+HAVING
+```
+
+### Objetivo adicional
+
+Entenda a diferença entre:
+
+```text
+WHERE
+```
+
+e:
+
+```text
+HAVING
+```
+
+e por que `HAVING` é apropriado para filtrar o resultado de uma agregação.
+
+---
+
+## Consulta 4 — Classificação dos aeroportos por altitude
+
+Crie uma classificação utilizando `CASE`.
+
+Classifique cada aeroporto em categorias definidas por você de acordo com sua altitude.
+
+Exemplo conceitual:
+
+```text
+airport_name | altitude | altitude_category
+```
+
+Você deverá definir e documentar os intervalos utilizados.
+
+### Conceitos trabalhados
+
+```text
+CASE
+WHEN
+THEN
+ELSE
+END
+```
+
+---
+
+# 🔎 SUBQUERIES
+
+## Consulta 5 — Aeroportos acima da altitude média nacional
+
+Descubra primeiro a altitude média considerando todos os aeroportos.
+
+Depois retorne somente os aeroportos cuja altitude esteja acima dessa média.
+
+Apresente pelo menos:
+
+```text
+airport_name
+city
+state
+altitude
+```
+
+### Requisito
+
+A média utilizada para comparação deverá ser calculada dinamicamente.
+
+Não coloque manualmente no SQL um valor previamente calculado.
+
+### Conceitos trabalhados
+
+```text
+Subquery
+AVG
+WHERE
+```
+
+---
+
+## Consulta 6 — Aeroporto ou aeroportos de maior altitude
+
+Encontre o maior valor de altitude existente no dataset e retorne o aeroporto associado a ele.
+
+Sua consulta deve continuar funcionando corretamente caso dois aeroportos possuam exatamente a mesma altitude máxima.
+
+### Conceitos trabalhados
+
+```text
+Subquery
+MAX
+```
+
+---
+
+# 🧱 CTE — Common Table Expression
+
+## Consulta 7 — Estados com quantidade de aeroportos acima da média
+
+Primeiro calcule:
+
+```text
+quantidade de aeroportos de cada estado
+```
+
+Depois calcule:
+
+```text
+média da quantidade de aeroportos entre os estados
+```
+
+Por fim, retorne somente os estados cuja quantidade esteja acima dessa média.
+
+### Requisito
+
+Utilize pelo menos uma:
+
+```sql
+WITH ...
+```
+
+### Conceitos trabalhados
 
 ```text
 CTE
-Subquery
+GROUP BY
+COUNT
+AVG
+```
+
+---
+
+## Consulta 8 — Estados com altitude média acima da média nacional
+
+Utilize uma CTE para calcular a altitude média por estado.
+
+Depois compare a média de cada estado com a altitude média geral dos aeroportos.
+
+Retorne somente os estados que estejam acima da média nacional.
+
+### Conceitos trabalhados
+
+```text
+CTE
+AVG
+GROUP BY
+Subquery ou segunda CTE
+```
+
+---
+
+# 🧱🧱 MÚLTIPLAS CTEs
+
+## Consulta 9 — Análise estatística dos estados
+
+Construa uma consulta utilizando pelo menos **duas CTEs**.
+
+Uma CTE deverá calcular estatísticas por estado, como:
+
+```text
+quantidade de aeroportos
+altitude média
+menor altitude
+maior altitude
+```
+
+Outra CTE deverá calcular alguma referência geral do dataset.
+
+Na consulta final, combine essas informações para responder uma pergunta analítica.
+
+Você deverá definir e documentar a pergunta respondida.
+
+### Conceitos trabalhados
+
+```text
+WITH
+múltiplas CTEs
+COUNT
+AVG
+MIN
+MAX
+```
+
+---
+
+# 🪟 WINDOW FUNCTIONS
+
+## Consulta 10 — Ranking nacional de aeroportos por altitude
+
+Crie um ranking de todos os aeroportos brasileiros utilizando a altitude.
+
+Apresente:
+
+```text
+airport_name
+state
+altitude
+ranking
+```
+
+O aeroporto de maior altitude deverá ocupar a primeira posição.
+
+### Requisito
+
+Utilize uma Window Function.
+
+### Conceitos trabalhados
+
+```text
+RANK()
+OVER()
+ORDER BY
+```
+
+---
+
+## Consulta 11 — Ranking de aeroportos dentro de cada estado
+
+Agora o ranking deverá ser independente para cada estado.
+
+Exemplo conceitual:
+
+```text
+Minas Gerais
+1 → Aeroporto A
+2 → Aeroporto B
+3 → Aeroporto C
+
+São Paulo
+1 → Aeroporto D
+2 → Aeroporto E
+3 → Aeroporto F
+```
+
+O ranking deverá reiniciar quando o estado mudar.
+
+### Conceitos trabalhados
+
+```text
+RANK()
+OVER()
+PARTITION BY
+ORDER BY
+```
+
+---
+
+## Consulta 12 — Comparando ROW_NUMBER, RANK e DENSE_RANK
+
+Crie uma consulta que utilize simultaneamente:
+
+```text
+ROW_NUMBER()
+RANK()
+DENSE_RANK()
+```
+
+Utilize a altitude como critério de ordenação.
+
+Apresente as três classificações lado a lado.
+
+Exemplo estrutural:
+
+```text
+airport_name
+altitude
+row_number_position
+rank_position
+dense_rank_position
+```
+
+Depois analise o resultado e tente identificar o comportamento das três funções quando existem valores empatados.
+
+### Conceitos trabalhados
+
+```text
+ROW_NUMBER()
+RANK()
+DENSE_RANK()
+OVER()
+ORDER BY
+```
+
+### Pergunta de estudo
+
+Após executar a consulta, explique no README ou em comentários SQL:
+
+> Qual é a diferença entre `ROW_NUMBER`, `RANK` e `DENSE_RANK` quando existem empates?
+
+---
+
+# 🪟 AGREGAÇÕES COMO WINDOW FUNCTIONS
+
+## Consulta 13 — Comparação do aeroporto com a média de seu estado
+
+Para cada aeroporto, apresente:
+
+```text
+airport_name
+state
+altitude
+state_avg_altitude
+```
+
+A média do estado deverá aparecer ao lado de cada aeroporto **sem transformar todos os aeroportos daquele estado em uma única linha**.
+
+### Restrição
+
+Não resolva este requisito utilizando apenas:
+
+```text
+GROUP BY
+```
+
+### Conceitos trabalhados
+
+```text
+AVG() OVER()
+PARTITION BY
+```
+
+### Objetivo de estudo
+
+Entender a diferença entre:
+
+```text
+GROUP BY
+```
+
+que normalmente reduz várias linhas em grupos, e:
+
+```text
 Window Function
 ```
 
-Evite criar cinco consultas que sejam apenas variações de:
+que pode preservar as linhas originais enquanto calcula informações sobre um conjunto delas.
 
-```sql
-SELECT * FROM ...
+---
+
+## Consulta 14 — Quantidade de aeroportos do estado em cada registro
+
+Para cada aeroporto, apresente também quantos aeroportos existem naquele mesmo estado.
+
+Exemplo conceitual:
+
+```text
+airport_name | state        | airports_in_state
+-------------|--------------|------------------
+Aeroporto A  | Minas Gerais | 20
+Aeroporto B  | Minas Gerais | 20
+Aeroporto C  | São Paulo    | 30
 ```
 
-O objetivo é demonstrar capacidade de analisar os dados carregados.
+### Conceitos trabalhados
 
-### O que será avaliado
+```text
+COUNT() OVER()
+PARTITION BY
+```
 
-- **10.1** — Se existem pelo menos cinco consultas.
-- **10.2** — Se existe uma consulta com agregação.
-- **10.3** — Se existe uma consulta utilizando CTE, Subquery ou Window Function.
-- **10.4** — Se as consultas respondem perguntas coerentes sobre os dados.
-- **10.5** — Se o SQL está organizado e legível.
+---
 
-</details>
+# ↔️ LAG E LEAD
+
+## Consulta 15 — Comparação de altitude entre aeroportos consecutivos
+
+Ordene os aeroportos pela altitude e apresente, para cada registro:
+
+```text
+airport_name
+altitude
+previous_airport_altitude
+next_airport_altitude
+```
+
+### Conceitos trabalhados
+
+```text
+LAG()
+LEAD()
+OVER()
+ORDER BY
+```
+
+### Objetivo de estudo
+
+Entender como acessar valores de linhas anteriores e posteriores sem realizar `JOIN` da tabela com ela mesma.
+
+---
+
+## Consulta 16 — Diferença de altitude para o aeroporto anterior
+
+Partindo da ideia da consulta anterior, calcule também a diferença entre:
+
+```text
+altitude atual
+-
+altitude do aeroporto anterior
+```
+
+Apresente:
+
+```text
+airport_name
+altitude
+previous_altitude
+altitude_difference
+```
+
+### Conceitos trabalhados
+
+```text
+LAG()
+Window Functions
+operações aritméticas
+```
+
+---
+
+# 🧩 CTE + WINDOW FUNCTION
+
+## Consulta 17 — Aeroportos mais altos de cada estado
+
+Retorne apenas os aeroportos que ocupam as primeiras posições de altitude dentro de cada estado.
+
+Por exemplo:
+
+```text
+3 aeroportos mais altos de cada estado
+```
+
+### Requisitos
+
+A solução deverá utilizar:
+
+```text
+CTE
++
+Window Function
++
+PARTITION BY
+```
+
+A quantidade de posições retornadas pode ser definida por você.
+
+### Conceitos trabalhados
+
+```text
+WITH
+RANK / DENSE_RANK / ROW_NUMBER
+OVER
+PARTITION BY
+WHERE
+```
+
+> Pense em por que pode ser necessário calcular o ranking primeiro e filtrá-lo posteriormente.
+
+---
+
+## Consulta 18 — Estado de cada aeroporto comparado com o cenário nacional
+
+Construa uma CTE contendo estatísticas por estado.
+
+Depois utilize Window Functions ou outras operações SQL para comparar cada estado com o restante do dataset.
+
+Sua análise deverá apresentar pelo menos:
+
+```text
+state
+airports_count
+avg_altitude
+```
+
+e alguma medida comparativa definida por você.
+
+### Conceitos trabalhados
+
+```text
+CTE
+GROUP BY
+Window Functions
+Agregações
+```
+
+---
+
+# 🌎 ANÁLISE GEOGRÁFICA
+
+## Consulta 19 — Extremos geográficos dos aeroportos
+
+Utilizando:
+
+```text
+latgeopoint
+longeopoint
+```
+
+determine aeroportos que representem extremos geográficos do dataset.
+
+Investigue pelo menos dois dos seguintes:
+
+```text
+mais ao norte
+mais ao sul
+mais a leste
+mais a oeste
+```
+
+### Conceitos trabalhados
+
+```text
+MIN
+MAX
+ORDER BY
+LIMIT
+interpretação de latitude/longitude
+```
+
+> ⚠️ Antes de implementar, pesquise e entenda como valores positivos e negativos de latitude e longitude representam posições geográficas. Não assuma que "menor número = norte" ou algo semelhante sem compreender o sistema de coordenadas.
+
+---
+
+# 🧠 DESAFIO FINAL — Consulta livre
+
+## Consulta 20 — Crie sua própria análise
+
+Agora formule uma pergunta sobre o dataset sem receber a lógica pronta.
+
+Sua consulta deverá combinar **pelo menos três conceitos** estudados nesta etapa.
+
+Você poderá escolher entre:
+
+```text
+GROUP BY
+HAVING
+CASE
+Subquery
+CTE
+Window Function
+PARTITION BY
+ROW_NUMBER
+RANK
+DENSE_RANK
+LAG
+LEAD
+AVG
+COUNT
+MIN
+MAX
+```
+
+Antes da consulta, escreva um comentário contendo a pergunta que você pretende responder.
+
+Exemplo:
+
+```sql
+-- Pergunta:
+-- <escreva aqui o que você quer descobrir>
+
+-- Consulta:
+```
+
+Não replique exatamente uma das 19 consultas anteriores.
+
+---
+
+# ✅ Checklist de SQL
+
+Ao terminar esta etapa, verifique se você consegue explicar, sem apenas reproduzir o código:
+
+- [ ] Como funciona `GROUP BY`;
+- [ ] A diferença entre `WHERE` e `HAVING`;
+- [ ] Como utilizar `CASE`;
+- [ ] O que é uma Subquery;
+- [ ] O que é uma CTE;
+- [ ] Por que utilizar CTEs;
+- [ ] Como utilizar múltiplas CTEs;
+- [ ] O que é uma Window Function;
+- [ ] Para que serve `OVER()`;
+- [ ] Para que serve `PARTITION BY`;
+- [ ] A diferença entre `GROUP BY` e `PARTITION BY`;
+- [ ] A diferença entre `ROW_NUMBER`, `RANK` e `DENSE_RANK`;
+- [ ] Como utilizar agregações como `AVG()` e `COUNT()` como Window Functions;
+- [ ] Para que servem `LAG` e `LEAD`;
+- [ ] Como combinar CTEs e Window Functions;
+- [ ] Como utilizar SQL para responder perguntas analíticas sobre dados reais.
+
+---
+
+# 🗂️ Organização sugerida do `analysis.sql`
+
+Organize seu arquivo utilizando comentários:
+
+```sql
+-- =====================================================
+-- CONSULTA 01
+-- Quantidade de aeroportos por estado
+-- Conceitos: GROUP BY, COUNT, ORDER BY
+-- =====================================================
+
+-- implementação
+
+
+-- =====================================================
+-- CONSULTA 02
+-- Altitude média por estado
+-- Conceitos: AVG, GROUP BY
+-- =====================================================
+
+-- implementação
+
+
+-- =====================================================
+-- CONSULTA 03
+-- Estados com vários aeroportos
+-- Conceitos: HAVING
+-- =====================================================
+
+-- implementação
+```
+
+Continue seguindo o mesmo padrão para as demais consultas.
+
+---
+
+# 🎯 Critério de conclusão
+
+Esta etapa não será considerada concluída apenas porque as consultas executam sem erros.
+
+Você deverá conseguir explicar:
+
+```text
+O que a consulta responde?
+
+Por que escolheu essa abordagem?
+
+Em qual ordem lógica as operações acontecem?
+
+Por que uma CTE ou Subquery foi utilizada?
+
+Por que GROUP BY ou PARTITION BY foi utilizado?
+
+O que a Window Function está calculando?
+
+O que aconteceria se existissem empates?
+```
+
+O objetivo é sair desta etapa sabendo **construir e interpretar SQL analítico**, e não apenas copiar sua sintaxe.
 
 ---
 
