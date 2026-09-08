@@ -59,7 +59,7 @@ class AirportsLoad():
 
     airports_csv = AirportsLoad.BASE_DIR / "data" / "processed" / "airports.csv"
 
-    query = '''INSER INTO airports (
+    query = '''INSERT INTO airports (
       ciad,
       codigoOACI,
       airport_name,
@@ -72,24 +72,22 @@ class AirportsLoad():
       longitude)
     VALUES (
       %s, %s, %s, %s, %s, %s, 
-      %s, %s, %s, %s, %s, %s,
+      %s, %s, %s, %s
     )
     ON CONFLICT(ciad)
     DO UPDATE SET
-      ciad = EXCLUDED.ciad
-      codigoOACI = EXCLUDED.codigoOACI
-      airport_name = EXCLUDED.airport_name
-      state = EXCLUDED.state
-      city = EXCLUDED.city
-      altitude = EXCLUDED.altitude
-      latgeopoint = EXCLUDED.latgeopoint
-      longeopoint = EXCLUDED.longeopoint
-      latitude = EXCLUDED.latitude
-      longitude = EXCLUDED.longitude
-      update_at = CURRENT_TIMESTAMP
+      codigoOACI = EXCLUDED.codigoOACI,
+      airport_name = EXCLUDED.airport_name,
+      state = EXCLUDED.state,
+      city = EXCLUDED.city,
+      altitude = EXCLUDED.altitude,
+      latgeopoint = EXCLUDED.latgeopoint,
+      longeopoint = EXCLUDED.longeopoint,
+      latitude = EXCLUDED.latitude,
+      longitude = EXCLUDED.longitude,
+      updated_at = CURRENT_TIMESTAMP
       WHERE
-      airports.ciad IS DISTINCT FROM EXCLUDED.ciad
-      OR airports.codigoOACI IS DISTINCT FROM EXCLUDED.codigoOACI
+      airports.codigoOACI IS DISTINCT FROM EXCLUDED.codigoOACI
       OR airports.airport_name IS DISTINCT FROM EXCLUDED.airport_name
       OR airports.state IS DISTINCT FROM EXCLUDED.state
       OR airports.city IS DISTINCT FROM EXCLUDED.city
@@ -101,23 +99,23 @@ class AirportsLoad():
     '''
     try:
       with open(airports_csv, mode='r', encoding="utf-8") as arquivo:
-        leitor_dict = csv.DictReader(arquivo, delimiter=';')
+        leitor_dict = csv.DictReader(arquivo, delimiter=',')
 
         connection = AirportsLoad.get_connection()
         cursor = connection.cursor()
 
         data_to_insert = [
           (
-            row(['ciad']),
-            row(['codigoOACI']),
-            row(['airport_name']),
-            row(['state']),
-            row(['city']),
-            row(['altitude']),
-            row(['latgeopoint']),
-            row(['longeopoint']),
-            row(['latitude']),
-            row(['longitude']),
+            row['ciad'],
+            row['codigoOACI'],
+            row['airport_name'],
+            row['state'],
+            row['city'],
+            row['altitude'],
+            row['latgeopoint'],
+            row['longeopoint'],
+            row['latitude'],
+            row['longitude'],
 
           )
           for row in leitor_dict

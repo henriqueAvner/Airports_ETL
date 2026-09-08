@@ -1,0 +1,17 @@
+2026-09-08 11:44:16,952 | INFO | src.extract.extract | Iniciando extração dos dados de aeródromos públicos
+2026-09-08 11:44:17,385 | INFO | src.extract.extract | Dados extraídos com sucesso! Aeródromos públicos: 496
+2026-09-08 11:44:17,386 | INFO | __main__ | Dados extraídos com sucesso
+2026-09-08 11:44:17,388 | INFO | src.transform.transform | Iniciando a transformação dos dados, total: 496
+2026-09-08 11:44:17,388 | INFO | src.transform.transform | Processando 496 dados aprovados
+2026-09-08 11:44:17,391 | INFO | src.transform.transform | Dados  processados e gravados em: C:\Portifolio_Engenheiro_Dados\Projetos\Airports_ETL\data\processed\airports.csv
+2026-09-08 11:44:17,391 | INFO | src.transform.transform | Processando 0 dados rejeitados
+2026-09-08 11:44:17,391 | INFO | src.transform.transform | Dados rejeitados gravados em: C:\Portifolio_Engenheiro_Dados\Projetos\Airports_ETL\data\rejected\rejected.json
+2026-09-08 11:44:17,391 | INFO | __main__ | Dados Transformados com sucesso
+2026-09-08 11:44:17,392 | INFO | __main__ | Verificando a existência da tabela em banco
+2026-09-08 11:44:17,392 | INFO | src.load.load | Iniciando criação / verificação das tabelas
+2026-09-08 11:44:17,408 | INFO | src.load.load | Tabelas criadas / verificadas com sucesso
+2026-09-08 11:44:17,408 | INFO | __main__ | Carregando dados no PostgreSQL
+2026-09-08 11:44:17,409 | INFO | src.load.load | Iniciando carga de dados ao banco
+2026-09-08 11:44:17,430 | INFO | src.load.load | Dados preparados para carga, registros = 496
+2026-09-08 11:44:17,495 | INFO | src.load.load | Carga no PostgreSQL concluída, total = 496
+2026-09-08 11:44:17,495 | INFO | __main__ | Pipeline finalizado com sucesso, duração=0.54 segundos
